@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.google.ads.interactivemedia.v3:interactivemedia:3.35.1@aar" external-system-id="GRADLE">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Documents/caches/8.11.1/transforms/0531096d6d66d96277dd9bda7170d252/transformed/interactivemedia-3.35.1/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/Documents/caches/8.11.1/transforms/0531096d6d66d96277dd9bda7170d252/transformed/interactivemedia-3.35.1/AndroidManifest.xml" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/Documents/caches/modules-2/files-2.1/com.google.ads.interactivemedia.v3/interactivemedia/3.35.1/bc8b5fa2d967ea6071fc5ff501ad1b16bece45ce/interactivemedia-3.35.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>

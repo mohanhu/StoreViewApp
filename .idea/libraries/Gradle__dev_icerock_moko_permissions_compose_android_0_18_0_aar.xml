@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Gradle: dev.icerock.moko:permissions-compose-android:0.18.0@aar" external-system-id="GRADLE">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Documents/caches/8.11.1/transforms/f922c8717b0e6e0a9f4cb5785c8e2de8/transformed/permissions-compose-debug/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/Documents/caches/8.11.1/transforms/f922c8717b0e6e0a9f4cb5785c8e2de8/transformed/permissions-compose-debug/AndroidManifest.xml" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/Documents/caches/modules-2/files-2.1/dev.icerock.moko/permissions-compose-android/0.18.0/8100c8f642c2011a563ba6bccca5db5d9a99493c/permissions-compose-android-0.18.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$USER_HOME$/Documents/caches/modules-2/files-2.1/dev.icerock.moko/permissions-compose-android/0.18.0/94d9fb1ce2e97c82cee9fd6e2cf0d0f8226238a3/permissions-compose-android-0.18.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

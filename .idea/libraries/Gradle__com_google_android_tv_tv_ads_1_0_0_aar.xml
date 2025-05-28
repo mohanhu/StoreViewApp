@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Gradle: com.google.android.tv:tv-ads:1.0.0@aar" external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$USER_HOME$/Documents/caches/8.11.1/transforms/aedd58ca676c2aa4f0c118986d873997/transformed/tv-ads-1.0.0/res" />
+      <root url="file://$USER_HOME$/Documents/caches/8.11.1/transforms/aedd58ca676c2aa4f0c118986d873997/transformed/tv-ads-1.0.0/AndroidManifest.xml" />
+      <root url="jar://$USER_HOME$/Documents/caches/8.11.1/transforms/aedd58ca676c2aa4f0c118986d873997/transformed/tv-ads-1.0.0/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/Documents/caches/modules-2/files-2.1/com.google.android.tv/tv-ads/1.0.0/5f3e37a59e4cfdd340a9eca0e744cebfea5d0206/tv-ads-1.0.0-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>

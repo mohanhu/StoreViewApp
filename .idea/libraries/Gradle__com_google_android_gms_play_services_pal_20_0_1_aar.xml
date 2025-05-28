@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: com.google.android.gms:play-services-pal:20.0.1@aar" external-system-id="GRADLE">
+    <CLASSES>
+      <root url="file://$USER_HOME$/Documents/caches/8.11.1/transforms/eeb6129deaa0394998198226a9fd478e/transformed/play-services-pal-20.0.1/AndroidManifest.xml" />
+      <root url="jar://$USER_HOME$/Documents/caches/8.11.1/transforms/eeb6129deaa0394998198226a9fd478e/transformed/play-services-pal-20.0.1/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$USER_HOME$/Documents/caches/modules-2/files-2.1/com.google.android.gms/play-services-pal/20.0.1/805ed47b88a4f45833c3f2ee47e4ba0c5a8b7aa4/play-services-pal-20.0.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>
