@@ -108,7 +108,7 @@ fun MusicScreen(
             launch {
                 snackBarHostState.showSnackbar("Latest folders fetching...!", duration = SnackbarDuration.Short)
             }
-            accept.invoke(MusicUiAction.FetchMusic)
+            permissionGranted.invoke()
             delay(2000)
             isRefreshing = false
         }

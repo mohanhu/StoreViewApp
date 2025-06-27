@@ -11,6 +11,7 @@ import com.codeloop.storeviewapp.features.music.domain.repository.MusicLocalRepo
 import com.codeloop.storeviewapp.features.photo.data.local.toPhotoFolder
 import com.codeloop.storeviewapp.features.photo.domain.model.Folder
 import com.codeloop.storeviewapp.features.photo.domain.model.MediaFile
+import com.codeloop.storeviewapp.features.photo.domain.repository.MediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +33,7 @@ import kotlin.collections.toList
 class MusicViewModel
  @Inject constructor(
      @ApplicationContext private val context: Context,
+     private val mediaRepository: MediaRepository,
      private val musicLocalRepository: MusicLocalRepository
  ) : ViewModel() {
 
@@ -69,7 +71,6 @@ class MusicViewModel
 
     private fun onUiAction(musicUiAction: MusicUiAction) {
         when(musicUiAction){
-            MusicUiAction.FetchMusic -> getMusicFolders(context)
             MusicUiAction.PermissionGranted -> {
                 _uiState.update { it.copy(permissionGranted = true) }
                 getMusicFolders(context)
@@ -78,64 +79,7 @@ class MusicViewModel
     }
 
     private fun getMusicFolders(context: Context) = viewModelScope.launch {
-
-        // API < 29	Deprecated, may still work
-        val projection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-            arrayOf(
-                MediaStore.Audio.Media.RELATIVE_PATH,
-                MediaStore.Audio.Media._ID,
-            )
-        }
-        else{
-            arrayOf(
-                MediaStore.Audio.Media.DATA,
-                MediaStore.Audio.Media._ID
-            )
-        }
-
-        val uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-        val cursor = context.contentResolver.query(uri, projection, null, null, null)
-
-        val files = mutableListOf<Folder>()
-        cursor?.use {
-            val dataColumn = cursor.getColumnIndexOrThrow(projection[0])
-
-            while (cursor.moveToNext()) {
-
-                val columnId = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
-
-                val filePath = cursor.getString(dataColumn)
-
-                val id = cursor.getLong(columnId)
-
-                val file = File(filePath)
-                val folderName = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                    filePath.trimEnd('/').substringAfterLast('/')
-                }
-                else{
-                    file.absolutePath
-                }
-                val relativePath = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                    filePath
-                }
-                else{
-                    file.absolutePath
-                }
-                files.add(Folder(id = id, name = folderName, relativePath = relativePath, fileCount = 0))
-            }
-        }
-        val update : List<Folder> =  files.groupBy { it.name }.map {
-            Folder(
-                id = it.value.first().id,
-                name = it.key,
-                fileCount = it.value.size,
-                relativePath = it.value.first().relativePath
-            )
-        }.sortedBy {
-            it.name
-        }
-        println("PhotoViewModel : $update")
-        musicLocalRepository.insertAllMusicFolders(update.map { it.toMusicFolderEntity() })
+        mediaRepository.getAudioFolders()
     }
  }
 
@@ -147,6 +91,5 @@ data class MusicUiState (
 )
 
 sealed interface MusicUiAction {
-    data object FetchMusic: MusicUiAction
     data object PermissionGranted : MusicUiAction
 }

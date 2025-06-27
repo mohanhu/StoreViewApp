@@ -41,21 +41,22 @@ import com.codeloop.storeviewapp.features.photo.domain.model.MediaFile
 @Composable
 fun ImageCard(
     context: Context,
+    modifier: Modifier = Modifier,
     mediaFile : MediaFile,
     onImageClick : (MediaFile) -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .size(width = 50.dp, height = 150.dp)
+        modifier = modifier
+            .size(width = 100.dp, height = 100.dp)
             .border(
-                width = 2.dp,
-                color = Color.Green,
-                shape = RoundedCornerShape(8.dp)
+                width = 1.dp,
+                color = Color.LightGray,
+                shape = RoundedCornerShape(1.dp)
             ),
         onClick = {
             onImageClick.invoke(mediaFile)
         },
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(1.dp)
     ) {
         SubcomposeAsyncImage(
             modifier = Modifier.fillMaxSize(),
@@ -80,20 +81,21 @@ fun ImageCard(
 fun VideoThumbNailCard(
     context: Context,
     mediaFile: MediaFile,
+    modifier: Modifier = Modifier,
     onImageClick: (MediaFile) -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .size(width = 100.dp, height = 150.dp)
+        modifier = modifier
+            .size(width = 100.dp, height = 100.dp)
             .border(
-                width = 2.dp,
-                color = Color.Green,
-                shape = RoundedCornerShape(8.dp)
+                width = 1.dp,
+                color = Color.LightGray,
+                shape = RoundedCornerShape(1.dp)
             ),
         onClick = {
             onImageClick.invoke(mediaFile)
         },
-        shape = RoundedCornerShape(8.dp)
+        shape = RoundedCornerShape(1.dp)
     ) {
         SubcomposeAsyncImage(
             model =  ImageRequest.Builder(context)

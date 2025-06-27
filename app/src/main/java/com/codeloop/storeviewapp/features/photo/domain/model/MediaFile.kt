@@ -6,6 +6,8 @@ data class MediaFile(
     val id:Long,
     val name:String,
     val uri: Uri,
+    val createdAt: Long,
+    val relativePath: String,
     val mediaFileType : MediaFileType
 )
 
@@ -20,5 +22,6 @@ data class Folder (
     val name :String,
     val fileCount:Int,
     val relativePath: String,
-    val date : Long = 0L
+    val date : Long = 0L,
+    val mediaFile: List<MediaFile> = listOf(),
 )

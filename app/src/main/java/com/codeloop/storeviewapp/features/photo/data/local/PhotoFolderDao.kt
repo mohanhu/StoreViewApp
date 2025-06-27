@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PhotoFolderDao {
-    @Query("SELECT * FROM ${PhotoFolderTable.TABLE_NAME} ORDER BY ${PhotoFolderTable.Columns.CREATED_AT} DESC")
+    @Query("SELECT * FROM ${PhotoFolderTable.TABLE_NAME} ORDER BY ${PhotoFolderTable.Columns.CREATED_AT} ASC")
     fun getAllPhotoFolders(): List<PhotoFolderEntity>
 
-    @Query("SELECT * FROM ${PhotoFolderTable.TABLE_NAME} ORDER BY ${PhotoFolderTable.Columns.CREATED_AT} DESC")
+    @Query("SELECT * FROM ${PhotoFolderTable.TABLE_NAME} ORDER BY ${PhotoFolderTable.Columns.CREATED_AT} ASC")
     fun getAllAsPhotoFolders(): Flow<List<PhotoFolderEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

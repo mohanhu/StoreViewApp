@@ -1,16 +1,16 @@
 package com.codeloop.storeviewapp.features.photo.presentation
 
-import android.content.ContentUris
 import android.content.Context
-import android.provider.MediaStore
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.codeloop.storeviewapp.features.photo.data.local.MediaFolderEntity
 import com.codeloop.storeviewapp.features.photo.data.local.toMediaFile
-import com.codeloop.storeviewapp.features.photo.data.local.toMediaFileEntity
 import com.codeloop.storeviewapp.features.photo.domain.model.MediaFile
 import com.codeloop.storeviewapp.features.photo.domain.model.MediaFileType
-import com.codeloop.storeviewapp.features.photo.domain.repository.MediaFileRepository
+import com.codeloop.storeviewapp.features.photo.domain.repository.MediaFileLocalRepository
+import com.codeloop.storeviewapp.features.photo.domain.repository.MediaRepository
+import com.codeloop.storeviewapp.features.utils.zone.ZoneTimer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +25,8 @@ import javax.inject.Inject
 @HiltViewModel
 class PhotoListViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val mediaFileRepository: MediaFileRepository,
+    private val mediaRepository: MediaRepository,
+    private val mediaFileLocalRepository: MediaFileLocalRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel () {
 
@@ -44,64 +45,45 @@ class PhotoListViewModel @Inject constructor(
 
         accept = ::onUiAction
 
-        readFiles()
+        readFiles(folderName)
     }
 
-    private fun readFiles() {
-        mediaFileRepository.getAllAsMediaFiles(MediaFileType.Image).onEach { file ->
-            _uiState.update { it.copy(mediaFile = file.map { it.toMediaFile() }) }
+    private fun readFiles(folderName: String) {
+        mediaFileLocalRepository.getAllAsMediaFiles(MediaFileType.Image,folderName).onEach { file ->
+            val list : Map<String, List<MediaFolderEntity>> = file.groupBy {
+                ZoneTimer.formatByYearTimePattern(it.createdAt,"MMM dd yyyy")
+            }
+            val mediaFile = mutableListOf<PhotoListUiModel>().apply {
+                list.forEach { key ->
+                    val item = list[key.key]?:return@forEach
+                    add(PhotoListUiModel.Header(key.key.toString()))
+                    add(PhotoListUiModel.ImageList(item.map { it.toMediaFile() }))
+                }
+            }
+            _uiState.update {
+                it.copy(mediaFile = mediaFile)
+            }
         }.launchIn(viewModelScope)
     }
 
     private fun onUiAction(photoUiAction: PhotoListUiAction) {
         when(photoUiAction){
             is PhotoListUiAction.FetchImages -> fetchImages(photoUiAction.folder)
+            else -> {}
         }
     }
-    private fun fetchImages(folderName:String) = viewModelScope.launch {
-        val projection = arrayOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
-        )
-
-        val sortOrder = "${MediaStore.Images.Media.DATE_TAKEN} DESC"
-
-        val selection = "${MediaStore.Images.Media.RELATIVE_PATH} = ?"
-        val selectionArgs = arrayOf("$folderName")
-
-        context.contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            selectionArgs,
-            sortOrder
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndex(MediaStore.Images.Media._ID)
-            val nameColumn = cursor.getColumnIndex(MediaStore.Images.Media.DISPLAY_NAME)
-
-            val file = mutableListOf<MediaFile>()
-            while (cursor.moveToNext()){
-                val id = cursor.getLong(idColumn)
-                val name = cursor.getString(nameColumn)
-
-                val contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-                val uri = ContentUris.withAppendedId(contentUri,id)
-                file.add(MediaFile(
-                    id,
-                    name,
-                    uri,
-                    MediaFileType.Image
-                ))
-            }
-            mediaFileRepository.insertAllMediaFiles(file.map { it.toMediaFileEntity() })
-        }
+    private fun fetchImages(relativePath:String) = viewModelScope.launch {
+       mediaRepository.fetchImages(relativePath)
     }
 }
 
+sealed interface PhotoListUiModel {
+    data class Header(val message: String) : PhotoListUiModel
+    data class ImageList(val mediaFile: List<MediaFile>) : PhotoListUiModel
+}
 
 data class PhotoListUiState(
-    val mediaFile: List<MediaFile> = listOf(),
-    val permissionGranted: Boolean = false
+    val mediaFile: List<PhotoListUiModel> = listOf(),
 )
 
 sealed interface PhotoListUiAction {

@@ -59,7 +59,7 @@ fun PhotoScreen(
     modifier: Modifier = Modifier,
     title: String,
     uiState: State<PhotoUiState>,
-    accept: (PhotoUiAction) -> Unit,
+    accept: (PhotoUiAction) -> Unit = {},
     onItemClick : (String) -> Unit = {}
 ) {
 
@@ -107,7 +107,7 @@ fun PhotoScreen(
            launch {
                snackBarHostState.showSnackbar("Latest folder fetching...!", duration = SnackbarDuration.Short)
            }
-           accept.invoke(PhotoUiAction.FetchImages)
+           permissionGranted.invoke()
            delay(2000)
            isRefreshing = false
        }
@@ -139,7 +139,7 @@ fun PhotoScreen(
                                 .background(MaterialTheme.colorScheme.background)
                         ) {
                             items(uiState.value.mediaFileFolders) { folder ->
-                                FolderListItem(
+                                Folder2ListItem(
                                     context = context,
                                     folder = folder,
                                     onFolderClick = {

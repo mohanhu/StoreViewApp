@@ -1,16 +1,16 @@
 package com.codeloop.storeviewapp.features.video.presentation
 
-import android.content.ContentUris
 import android.content.Context
-import android.provider.MediaStore
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.codeloop.storeviewapp.features.photo.data.local.MediaFolderEntity
 import com.codeloop.storeviewapp.features.photo.data.local.toMediaFile
-import com.codeloop.storeviewapp.features.photo.data.local.toMediaFileEntity
 import com.codeloop.storeviewapp.features.photo.domain.model.MediaFile
 import com.codeloop.storeviewapp.features.photo.domain.model.MediaFileType
-import com.codeloop.storeviewapp.features.photo.domain.repository.MediaFileRepository
+import com.codeloop.storeviewapp.features.photo.domain.repository.MediaFileLocalRepository
+import com.codeloop.storeviewapp.features.photo.domain.repository.MediaRepository
+import com.codeloop.storeviewapp.features.utils.zone.ZoneTimer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +25,8 @@ import javax.inject.Inject
 @HiltViewModel
 class VideoListViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val mediaFileRepository: MediaFileRepository,
+    private val mediaRepository: MediaRepository,
+    private val mediaFileLocalRepository: MediaFileLocalRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel () {
 
@@ -44,12 +45,25 @@ class VideoListViewModel @Inject constructor(
 
         accept = ::onUiAction
 
-        readFiles()
+        readFiles(folderName)
     }
 
-    private fun readFiles() {
-        mediaFileRepository.getAllAsMediaFiles(MediaFileType.Video).onEach { file ->
-            _uiState.update { it.copy(mediaFile = file.map { it.toMediaFile() }) }
+    private fun readFiles(folderName: String) {
+        mediaFileLocalRepository.getAllAsMediaFiles(MediaFileType.Video,folderName)
+            .onEach { file ->
+                val list : Map<String, List<MediaFolderEntity>> = file.groupBy {
+                    ZoneTimer.formatByYearTimePattern(it.createdAt,"MMM dd yyyy")
+                }
+                val mediaFile = mutableListOf<VideoListUiModel>().apply {
+                    list.forEach { key ->
+                        val item = list[key.key]?:return@forEach
+                        add(VideoListUiModel.Header(key.key.toString()))
+                        add(VideoListUiModel.VideoList(item.map { it.toMediaFile() }))
+                    }
+                }
+                _uiState.update {
+                    it.copy(mediaFile = mediaFile)
+                }
         }.launchIn(viewModelScope)
     }
 
@@ -59,48 +73,17 @@ class VideoListViewModel @Inject constructor(
         }
     }
     private fun fetchVideos(folderName:String) = viewModelScope.launch {
-        val projection = arrayOf(
-            MediaStore.Video.Media._ID,
-            MediaStore.Video.Media.DISPLAY_NAME,
-            MediaStore.Video.Media.RELATIVE_PATH
-        )
-
-        val sortOrder = "${MediaStore.Video.Media.DATE_TAKEN} DESC"
-
-        val selection = "${MediaStore.Video.Media.RELATIVE_PATH} = ?"
-        val selectionArgs = arrayOf("$folderName")
-
-        context.contentResolver.query(
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            selectionArgs,
-            sortOrder
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndex(MediaStore.Video.Media._ID)
-            val nameColumn = cursor.getColumnIndex(MediaStore.Video.Media.DISPLAY_NAME)
-
-            val file = mutableListOf<MediaFile>()
-            while (cursor.moveToNext()){
-                val id = cursor.getLong(idColumn)
-                val name = cursor.getString(nameColumn)
-
-                val contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-                val uri = ContentUris.withAppendedId(contentUri,id)
-                file.add(
-                    MediaFile(
-                    id = id,
-                    name = name,
-                    uri = uri, mediaFileType = MediaFileType.Video
-                ))
-            }
-            mediaFileRepository.insertAllMediaFiles(file.map { it.toMediaFileEntity() })
-        }
+        mediaRepository.fetchVideos(folderName)
     }
 }
 
+sealed interface VideoListUiModel {
+    data class Header(val message: String) : VideoListUiModel
+    data class VideoList(val mediaFile: List<MediaFile>) : VideoListUiModel
+}
+
 data class VideoListUiState(
-    val mediaFile: List<MediaFile> = listOf(),
+    val mediaFile: List<VideoListUiModel> = listOf(),
 )
 
 sealed interface VideoListUiAction {

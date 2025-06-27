@@ -1,8 +1,10 @@
 package com.codeloop.storeviewapp.features.photo.di
 
-import com.codeloop.storeviewapp.features.photo.data.local.MediaFileRepositoryImpl
+import com.codeloop.storeviewapp.features.photo.data.local.MediaFileLocalRepositoryImpl
+import com.codeloop.storeviewapp.features.photo.data.local.MediaRepositoryImpl
 import com.codeloop.storeviewapp.features.photo.data.local.PhotoLocalRepositoryImpl
-import com.codeloop.storeviewapp.features.photo.domain.repository.MediaFileRepository
+import com.codeloop.storeviewapp.features.photo.domain.repository.MediaFileLocalRepository
+import com.codeloop.storeviewapp.features.photo.domain.repository.MediaRepository
 import com.codeloop.storeviewapp.features.photo.domain.repository.PhotoLocalRepository
 import dagger.Binds
 import dagger.Module
@@ -19,6 +21,10 @@ interface PhotoModule {
 
     @Binds
     @Singleton
-    fun bindMediaFiles(mediaFileRepositoryImpl: MediaFileRepositoryImpl): MediaFileRepository
+    fun bindMediaFiles(mediaFileRepositoryImpl: MediaFileLocalRepositoryImpl): MediaFileLocalRepository
+
+    @Binds
+    @Singleton
+    fun bindMediaRepository(mediaRepositoryImpl: MediaRepositoryImpl): MediaRepository
 
 }

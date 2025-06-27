@@ -8,14 +8,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
@@ -132,7 +133,7 @@ fun PhotoListScreen(
                     context = context,
                     viewmodel = viewmodel,
                     currentIndex = showSheet,
-                    mediaFile = uiState.value.mediaFile
+                    mediaFile = uiState.value.mediaFile.filterIsInstance<PhotoListUiModel.ImageList>().flatMap { it.mediaFile },
                 ) {
                     showSheet = -1
                 }
@@ -149,22 +150,57 @@ fun PhotoListScreen(
                         },
                         isRefreshing = isRefreshing,
                         content = {
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(3),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.fillMaxSize()
+                            LazyColumn (
+                                modifier = Modifier
+                                    .fillMaxSize()
                                     .background(MaterialTheme.colorScheme.background)
-                                    .padding(8.dp)
+                                    .padding(8.dp),
+                                verticalArrangement = Arrangement.Top,
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                itemsIndexed(uiState.value.mediaFile) { index , file ->
-                                    ImageCard(
-                                        context = context,
-                                        mediaFile = file,
-                                        onImageClick = {
-                                            showSheet = index
+
+                                itemsIndexed(uiState.value.mediaFile) { index, rowItems ->
+                                    when (rowItems) {
+                                        is PhotoListUiModel.Header -> {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth()
+                                                    .padding(vertical = 12.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Start
+                                            ) {
+                                                Text(
+                                                    text = rowItems.message,
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                )
+                                            }
                                         }
-                                    )
+
+                                        is PhotoListUiModel.ImageList -> {
+                                            val chunk = rowItems.mediaFile.chunked(3)
+                                            chunk.forEachIndexed { rowIndex, rowItems ->
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    rowItems.forEachIndexed { columnIndex, mediaFile ->
+                                                        ImageCard(
+                                                            context = context,
+                                                            mediaFile = mediaFile,
+                                                            modifier = Modifier
+                                                                .aspectRatio(1f)
+                                                                .weight(1f),
+                                                            onImageClick = {
+                                                                val files = uiState.value.mediaFile.filterIsInstance<PhotoListUiModel.ImageList>().flatMap { it.mediaFile }
+                                                                val index = files.indexOf(it)
+                                                                showSheet = index
+                                                            }
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
