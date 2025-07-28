@@ -7,7 +7,7 @@ import com.codeloop.storeviewapp.features.photo.domain.model.Folder
 
 @Entity(tableName = PhotoFolderTable.TABLE_NAME)
 data class PhotoFolderEntity (
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = PhotoFolderTable.Columns.ID) var id: Long = 0,
+    @PrimaryKey(autoGenerate = false) @ColumnInfo(name = PhotoFolderTable.Columns.ID) var id: Long = 0,
     @ColumnInfo(name = PhotoFolderTable.Columns.NAME) var name: String = "",
     @ColumnInfo(name = PhotoFolderTable.Columns.PATH) var path: String = "",
     @ColumnInfo(name = PhotoFolderTable.Columns.CREATED_AT) var createdAt: Long = 0,

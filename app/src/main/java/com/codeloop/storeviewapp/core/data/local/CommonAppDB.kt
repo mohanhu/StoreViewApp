@@ -18,7 +18,7 @@ import com.codeloop.storeviewapp.features.video.data.local.VideoFolderEntity
         VideoFolderEntity::class,
         MediaFolderEntity::class,
     ],
-    version = 3,
+    version = 2,
     exportSchema = false
 )
 abstract class CommonAppDB : RoomDatabase() {

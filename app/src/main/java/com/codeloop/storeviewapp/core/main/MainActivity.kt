@@ -65,7 +65,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -73,6 +75,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.codeloop.storeviewapp.core.main.nav.NavigationItem
+import com.codeloop.storeviewapp.features.PreviewScreen
 import com.codeloop.storeviewapp.features.docs.presentation.DocumentScreen
 import com.codeloop.storeviewapp.features.docs.presentation.DocumentViewModel
 import com.codeloop.storeviewapp.features.music.presentation.MusicListScreen
@@ -98,6 +101,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        installSplashScreen()
 
         setContent {
 
@@ -301,14 +306,16 @@ fun NavController(navController: NavHostController,modifier: Modifier) {
 
         composable(NavigationItem.Photo.route) {
             val viewModel: PhotoViewModel = hiltViewModel()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             PhotoScreen(
                 title = "Photo",
-                uiState = viewModel.uiState.collectAsState(),
+                uiState = uiState,
                 accept = viewModel.accept,
                 onItemClick = {
                     navController.navigate(NavigationItem.PhotoList(folderName = it))
                 }
             )
+//            PreviewScreen()
         }
         composable(NavigationItem.Video.route) {
             val viewModel: VideoViewModel = hiltViewModel()

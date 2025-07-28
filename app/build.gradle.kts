@@ -25,25 +25,39 @@ android {
     }
 
     buildTypes {
-        release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
 
         debug {
             isMinifyEnabled = false
             isShrinkResources = false
+            isDebuggable = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            isDebuggable = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("debug")
+        }
     }
 
+    flavorDimensions.add("default")
+    productFlavors {
+        create("dev") {
+            dimension = "default"
+        }
+
+        create("prod") {
+            dimension = "default"
+        }
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -113,10 +127,12 @@ dependencies {
 
     // Room
     implementation ("androidx.room:room-runtime:2.6.1")
-    kapt ("androidx.room:room-compiler:2.6.1")
+    ksp ("androidx.room:room-compiler:2.6.1")
     implementation ("androidx.room:room-ktx:2.6.1")
 
     implementation("dev.chrisbanes.snapper:snapper:0.3.0")
 
+    implementation ("androidx.compose.ui:ui-text-google-fonts:1.8.1")
+    implementation ("androidx.core:core-splashscreen:1.0.0")
 
 }

@@ -8,16 +8,22 @@ import androidx.lifecycle.viewModelScope
 import com.codeloop.storeviewapp.features.music.data.local.toMusicFolder
 import com.codeloop.storeviewapp.features.music.data.local.toMusicFolderEntity
 import com.codeloop.storeviewapp.features.music.domain.repository.MusicLocalRepository
+import com.codeloop.storeviewapp.features.photo.data.local.toMediaFile
 import com.codeloop.storeviewapp.features.photo.data.local.toPhotoFolder
 import com.codeloop.storeviewapp.features.photo.domain.model.Folder
 import com.codeloop.storeviewapp.features.photo.domain.model.MediaFile
+import com.codeloop.storeviewapp.features.photo.domain.model.MediaFileType
+import com.codeloop.storeviewapp.features.photo.domain.repository.MediaFileLocalRepository
 import com.codeloop.storeviewapp.features.photo.domain.repository.MediaRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -29,12 +35,14 @@ import javax.inject.Inject
 import kotlin.collections.map
 import kotlin.collections.toList
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MusicViewModel
  @Inject constructor(
      @ApplicationContext private val context: Context,
      private val mediaRepository: MediaRepository,
-     private val musicLocalRepository: MusicLocalRepository
+     private val musicLocalRepository: MusicLocalRepository,
+     private val mediaFileLocalRepository: MediaFileLocalRepository,
  ) : ViewModel() {
 
      private val _uiState = MutableStateFlow(MusicUiState())
@@ -47,10 +55,17 @@ class MusicViewModel
     init {
         accept = ::onUiAction
 
-        _uiState.asStateFlow().map { it.currentSelectFolder }.distinctUntilChanged().onEach { folder ->
-            if (folder.isNotBlank()){
+        _uiState.asStateFlow().map { it.currentSelectFolder }.distinctUntilChanged()
+            .flatMapLatest { folder ->
+                println("getAllAsMediaFiles`` folder : $folder")
+                mediaFileLocalRepository.getAllAsMediaFiles(mediaFileType = MediaFileType.Music, folder)
+        }.distinctUntilChanged()
+            .onEach { mediaFiles ->
+                _uiState.update {
+                    it.copy(mediaFile = mediaFiles.map { it.toMediaFile() })
+                }
             }
-        }.launchIn(viewModelScope)
+            .launchIn(viewModelScope)
 
         readFolderList()
     }
@@ -61,9 +76,7 @@ class MusicViewModel
                 _uiState.update {
                     it.copy(mediaFileFolders = folder.map {
                         it.toMusicFolder()
-                    }.toList(),
-                        currentSelectFolder = folder.firstOrNull()?.name?:""
-                    )
+                    }.toList())
                 }
             }
         }.launchIn(viewModelScope)
@@ -74,6 +87,10 @@ class MusicViewModel
             MusicUiAction.PermissionGranted -> {
                 _uiState.update { it.copy(permissionGranted = true) }
                 getMusicFolders(context)
+            }
+
+            is MusicUiAction.UpdateFolderName -> {
+                _uiState.update { it.copy(currentSelectFolder = musicUiAction.folderName) }
             }
         }
     }
@@ -91,5 +108,7 @@ data class MusicUiState (
 )
 
 sealed interface MusicUiAction {
+
+    data class UpdateFolderName (val folderName : String) : MusicUiAction
     data object PermissionGranted : MusicUiAction
 }

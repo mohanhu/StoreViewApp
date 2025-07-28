@@ -29,14 +29,13 @@
         android:largeHeap="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.StoreViewApp"
+        android:theme="@style/Theme.MySplash"
         tools:targetApi="31">
         <activity
             android:name=".core.main.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:theme="@style/Theme.StoreViewApp">
+            android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

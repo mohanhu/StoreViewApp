@@ -11,6 +11,7 @@ data class MediaFile(
     val mediaFileType : MediaFileType
 )
 
+
 enum class MediaFileType {
     Image,
     Video,
@@ -24,4 +25,17 @@ data class Folder (
     val relativePath: String,
     val date : Long = 0L,
     val mediaFile: List<MediaFile> = listOf(),
-)
+) {
+    companion object {
+        fun create(mediaFileType: MediaFileType) : List<Folder> {
+            return listOf(
+                Folder(
+                    id = 0,
+                    name = "All",
+                    fileCount = 0,
+                    relativePath = "",
+                )
+            )
+        }
+    }
+}

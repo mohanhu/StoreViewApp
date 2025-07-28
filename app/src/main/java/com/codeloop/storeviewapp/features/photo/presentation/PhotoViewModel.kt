@@ -17,6 +17,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -55,6 +56,7 @@ class PhotoViewModel @Inject constructor(
                 .filter { it.isNotEmpty()  }
                 .flatMapLatest { folders ->
                     mediaFileLocalRepository.getAllAsMediaFiles(MediaFileType.Image, "")
+                        .distinctUntilChanged()
                         .map { mediaList ->
                             val groupedMedia = mediaList.groupBy { it.relativePath }
 
@@ -67,11 +69,10 @@ class PhotoViewModel @Inject constructor(
                             folders
                         }
                 }
+                .distinctUntilChanged()
                 .collectLatest { mergedFolders ->
-                    withContext(Dispatchers.Main) {
-                        _uiState.update {
-                            it.copy(mediaFileFolders = mergedFolders)
-                        }
+                    _uiState.update {
+                        it.copy(mediaFileFolders = mergedFolders)
                     }
                 }
         }

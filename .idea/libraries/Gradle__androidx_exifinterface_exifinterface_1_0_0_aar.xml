@@ -4,8 +4,8 @@
       <root url="jar://$USER_HOME$/Documents/caches/8.11.1/transforms/edcd2ee463b936d65d95af21ca07d8ed/transformed/exifinterface-1.0.0/annotations.zip!/" />
     </ANNOTATIONS>
     <CLASSES>
-      <root url="file://$USER_HOME$/Documents/caches/8.11.1/transforms/edcd2ee463b936d65d95af21ca07d8ed/transformed/exifinterface-1.0.0/AndroidManifest.xml" />
       <root url="jar://$USER_HOME$/Documents/caches/8.11.1/transforms/edcd2ee463b936d65d95af21ca07d8ed/transformed/exifinterface-1.0.0/jars/classes.jar!/" />
+      <root url="file://$USER_HOME$/Documents/caches/8.11.1/transforms/edcd2ee463b936d65d95af21ca07d8ed/transformed/exifinterface-1.0.0/AndroidManifest.xml" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>

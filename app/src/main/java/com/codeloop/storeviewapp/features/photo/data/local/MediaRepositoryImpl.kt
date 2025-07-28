@@ -343,6 +343,7 @@ class MediaRepositoryImpl @Inject constructor(
                 }
             }
             val update : List<Folder> =  files.groupBy { it.name }.map {
+                fetchAudio( it.value.first().relativePath)
                 Folder(
                     id = it.value.first().id,
                     name = it.key,

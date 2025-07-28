@@ -11,6 +11,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +22,8 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Slider
+import androidx.compose.material.SliderDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
@@ -32,10 +34,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -49,11 +50,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -128,7 +131,7 @@ fun PreviewPagerScreen(
     ){
         HorizontalPager(
             state = pagerState,
-            key = { mediaFile[it].id },
+            key = { mediaFile[it.coerceAtMost(mediaFile.size-1)].id },
         ) { index ->
 
             when(mediaFile[index].mediaFileType){
@@ -316,16 +319,6 @@ fun PreviewPagerScreen(
                                                 inactiveTickColor = Color.Gray,
                                                 disabledThumbColor = Color.White,
                                             ),
-                                            thumb = {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(10.dp)
-                                                        .background(
-                                                            Color.White,
-                                                            shape = RoundedCornerShape(5.dp)
-                                                        )
-                                                )
-                                            },
                                         )
                                         IconButton(
                                             onClick = {
@@ -356,7 +349,7 @@ fun PreviewPagerScreen(
                                         if (hasError.value) {
                                             Text("Playback Error", color = Color.White)
                                         } else {
-                                            CircularProgressIndicator(color = Color.Cyan, trackColor = Color.Blue)
+                                            CircularProgressIndicator(color = Color.Magenta, trackColor = Color.White)
                                         }
                                     }
                                 }
@@ -436,90 +429,83 @@ fun PreviewPagerScreen(
                                 modifier = Modifier.fillMaxSize()
                             )
 
-                            MusicCardAnim(mediaFile[index])
-
-                            Box(modifier = Modifier
-                                .matchParentSize()
-                                .background(Color.Black.copy(alpha = 0.5f))
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        if (isPlay.value) player.pause() else player.play()
-                                    },
-                                    modifier = Modifier
-                                        .align(Alignment.Center)
-                                        .size(64.dp)
-                                ) {
-                                    AnimatedContent(
-                                        targetState = isPlay.value,
-                                        transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(150)) },
-                                        label = "isPlaying"
-                                    ) { isPlaying ->
-                                        Icon(
-                                            imageVector =  if (isPlaying) Icons.Default.PauseCircleOutline else Icons.Default.PlayCircleOutline ,
-                                            contentDescription = "Play/Pause",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(48.dp)
+                            Column(
+                                modifier = Modifier.fillMaxSize()
+                                    .background(
+                                        Brush.linearGradient(
+                                            colors = listOf(Color("#181e4e".toColorInt()), Color("#431965".toColorInt()))
                                         )
-                                    }
-                                }
+                                    )
+                                    .padding(20.dp)
+                            ) {
+                                MusicCardAnim(
+                                    modifier = Modifier.fillMaxSize().weight(2f),
+                                    mediaFile = mediaFile[index]
+                                )
+
+                                Slider(
+                                    value = currentDuration.floatValue,
+                                    onValueChange = {
+                                        player.seekTo(it.toLong())
+                                    },
+                                    onValueChangeFinished = {
+
+                                    },
+                                    valueRange = 0f..(player.duration.takeIf { it>0 }?:0f).toFloat(),
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = Color.White,
+                                        activeTrackColor = Color.White,
+                                        inactiveTrackColor = Color.Gray,
+                                        activeTickColor = Color.White,
+                                        inactiveTickColor = Color.Gray,
+                                        disabledThumbColor = Color.White,
+                                    ),
+                                )
+
+                                val duration = formatVideoDuration(player.currentPosition, player.duration)
 
                                 Row(
-                                    modifier = Modifier.padding(12.dp).align(Alignment.BottomCenter),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 20.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = formatVideoDuration(player.currentPosition,player.duration),
+                                        text = duration.split('/').firstOrNull() ?: "",
                                         color = Color.White,
-                                        modifier = Modifier.padding(8.dp),
-                                        textAlign = TextAlign.Center,
-                                        fontSize = 10.sp
+                                        style = MaterialTheme.typography.bodyMedium
                                     )
-
-                                    Slider(
-                                        value = currentDuration.floatValue,
-                                        onValueChange = {
-                                            player.seekTo(it.toLong())
-                                        },
-                                        onValueChangeFinished = {
-
-                                        },
-                                        valueRange = 0f..(player.duration.takeIf { it>0 }?:0f).toFloat(),
-                                        modifier = Modifier.fillMaxWidth().padding(end = 8.dp).height(2.dp).weight(1f).align(Alignment.CenterVertically),
-                                        colors = SliderDefaults.colors(
-                                            thumbColor = Color.White,
-                                            activeTrackColor = Color.White,
-                                            inactiveTrackColor = Color.Gray,
-                                            activeTickColor = Color.White,
-                                            inactiveTickColor = Color.Gray,
-                                            disabledThumbColor = Color.White,
-                                        ),
-                                        thumb = {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(10.dp)
-                                                    .background(
-                                                        Color.White,
-                                                        shape = RoundedCornerShape(5.dp)
-                                                    )
-                                            )
-                                        },
+                                    Text(
+                                        text = duration.split('/').lastOrNull() ?: "",
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.bodyMedium
                                     )
+                                }
+
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().weight(0.5f),
+                                    contentAlignment = Alignment.Center,
+                                ) {
                                     IconButton(
                                         onClick = {
-                                            fullScreen.value = !fullScreen.value
+                                            if (isPlay.value) player.pause() else player.play()
                                         },
                                         modifier = Modifier
+                                            .size(48.dp)
+                                            .align(Alignment.Center)
                                     ) {
                                         AnimatedContent(
-                                            targetState = fullScreen.value,
-                                            label = "fullScreen"
-                                        ) { orientation ->
+                                            targetState = isPlay.value,
+                                            transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(150)) },
+                                            label = "isPlaying"
+                                        ) { isPlaying ->
                                             Icon(
-                                                imageVector = if (orientation) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
-                                                contentDescription = "Fullscreen",
-                                                tint = Color.White
+                                                imageVector =  if (isPlaying) Icons.Default.PauseCircleOutline else Icons.Default.PlayCircleOutline ,
+                                                contentDescription = "Play/Pause",
+                                                tint = Color.White,
+                                                modifier = Modifier.fillMaxSize()
                                             )
                                         }
                                     }
@@ -534,7 +520,7 @@ fun PreviewPagerScreen(
                                     if (hasError.value) {
                                         Text("Playback Error", color = Color.White)
                                     } else {
-                                        CircularProgressIndicator(color = Color.Cyan, trackColor = Color.Blue)
+                                        CircularProgressIndicator(color = Color.Magenta, trackColor = Color.White)
                                     }
                                 }
                             }

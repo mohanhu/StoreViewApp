@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,61 +40,68 @@ fun CircleMergeImageCard(
     mediaFileType: MediaFileType = MediaFileType.Image,
     images: List<String> = listOf()
 ) {
+    if (images.isEmpty()) return
+
+    val showMore = images.size > maxLimit
+    val displayList = if (showMore) images.take(maxLimit - 1) else images
+    val remainingCount = (images.size - (maxLimit - 1)).takeIf { it < 99 } ?: 99
+
     Box(
-    modifier = Modifier,
-    contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center
     ) {
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(space = (-10).dp, alignment = Alignment.End),
-            contentPadding = PaddingValues(0.dp),
             reverseLayout = false
         ) {
-            itemsIndexed(images.take(maxLimit)) { index, item ->
+            itemsIndexed(displayList) { _, item ->
+                val imageRequest = remember(item) {
+                    val builder = ImageRequest.Builder(context).data(item)
+                    if (mediaFileType == MediaFileType.Video) {
+                        builder.videoFrameMillis(10000)
+                            .decoderFactory { result, options, _ ->
+                                VideoFrameDecoder(result.source, options)
+                            }
+                    }
+                    builder
+                        .crossfade(true)
+                        .placeholder(R.drawable.folder_thumb_nail)
+                        .error(R.drawable.folder_thumb_nail)
+                        .build()
+                }
+
                 Box(
                     modifier = Modifier
-                        .align(Alignment.CenterEnd)
                         .size(32.dp)
                         .clip(CircleShape)
                         .background(Color.Gray)
                         .border(1.dp, Color.White, CircleShape),
-                    contentAlignment = Alignment.Center,
+                    contentAlignment = Alignment.Center
                 ) {
-                    if (index<maxLimit-1){
-                        val request = if (mediaFileType== MediaFileType.Image){
-                            ImageRequest.Builder(context)
-                                .data(item)
+                    SubcomposeAsyncImage(
+                        modifier = Modifier.fillMaxSize(),
+                        model = imageRequest,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        error = {
+                            Icon(Icons.Default.Warning, contentDescription = "error", tint = Color.Red)
                         }
-                        else{
-                            ImageRequest.Builder(context)
-                                .data(item)
-                                .videoFrameMillis(10000)
-                                .decoderFactory { result, options, _ ->
-                                    VideoFrameDecoder(
-                                        result.source,
-                                        options
-                                    )
-                                }
-                        }
-                        SubcomposeAsyncImage(
-                            modifier = Modifier.fillMaxSize(),
-                            model = request
-                                .crossfade(true)
-                            .crossfade(10)
-                            .placeholder(R.drawable.folder_thumb_nail)
-                            .error(R.drawable.folder_thumb_nail)
-                            .build(),
-                            contentDescription = "Load",
-                            contentScale = ContentScale.Crop,
-                            error = {
-                                Icon(Icons.Default.Warning, contentDescription = "error",tint = Color.Red)
-                            }
-                        )
-                    }
-                    else{
-                        val count = ((images.size-maxLimit)+1).takeIf { it < 99 }?:99
-                        Text("+$count", style = MaterialTheme.typography.labelSmall)
+                    )
+                }
+            }
+
+            if (showMore) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color.Gray)
+                            .border(1.dp, Color.White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("+$remainingCount", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }

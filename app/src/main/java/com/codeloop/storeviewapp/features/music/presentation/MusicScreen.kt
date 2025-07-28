@@ -12,13 +12,17 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -30,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -37,18 +42,24 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.codeloop.storeviewapp.features.photo.presentation.FolderListItem
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.codeloop.storeviewapp.features.photo.domain.model.Folder
+import com.codeloop.storeviewapp.features.photo.domain.model.MediaFileType
+import com.codeloop.storeviewapp.features.photo.presentation.PreviewPagerScreen
+import com.codeloop.storeviewapp.features.photo.presentation.PreviewVIewModel
 import com.codeloop.storeviewapp.features.utils.permissions.rememberPermissions
 import com.codeloop.storeviewapp.features.utils.view.AlertDialogs
 import com.codeloop.storeviewapp.features.utils.view.SwipeRefreshAction
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.compareTo
 
 @Composable
 fun MusicScreen(
@@ -56,7 +67,7 @@ fun MusicScreen(
     title: String,
     uiState: State<MusicUiState>,
     accept: (MusicUiAction) -> Unit,
-    onItemClick : (String) -> Unit = {}
+    onItemClick : (String) -> Unit = {},
 ) {
 
     val context = LocalContext.current
@@ -102,6 +113,7 @@ fun MusicScreen(
 
 
     var isRefreshing by remember { mutableStateOf(false) }
+    var showSheet by remember { mutableStateOf(-1) }
 
     LaunchedEffect(isRefreshing) {
         if (isRefreshing){
@@ -121,13 +133,47 @@ fun MusicScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackBarHostState) }
+        snackbarHost = { SnackbarHost(snackBarHostState) },
+        topBar = {
+            val folder = uiState.value.mediaFileFolders
+            if (folder.isNotEmpty()){
+                var selectedTab by remember { mutableLongStateOf(0L) }
+                MusicTabBar(
+                    tabs = Folder.create(MediaFileType.Music).plus(folder),
+                    selectedIndex = selectedTab,
+                    onSelected = {
+                        selectedTab = it
+                        accept.invoke(
+                            MusicUiAction.UpdateFolderName(
+                                folder.firstOrNull { it.id == selectedTab }?.relativePath
+                                    .takeIf { it != "All" }?:""
+                            )
+                        )
+                    }
+                )
+            }
+        }
     ) {
+
+        val viewmodel  : PreviewVIewModel = hiltViewModel()
+        if (showSheet >= 0) {
+            PreviewPagerScreen(
+                context = context,
+                viewmodel = viewmodel,
+                currentIndex = showSheet,
+                mediaFile = uiState.value.mediaFile,
+                cancelSheetDialog = {
+                    showSheet = -1
+                }
+            )
+        }
+
         Box(
             modifier = modifier.fillMaxSize().padding(it),
             contentAlignment = Alignment.Center,
         ) {
-            if (uiState.value.mediaFileFolders.isNotEmpty()) {
+
+            if (uiState.value.mediaFile.isNotEmpty()) {
                 SwipeRefreshAction(
                     onRefresh = {
                         isRefreshing = true
@@ -139,12 +185,12 @@ fun MusicScreen(
                                 .fillMaxSize()
                                 .background(MaterialTheme.colorScheme.background)
                         ) {
-                            items(uiState.value.mediaFileFolders) { folder ->
-                                FolderListItem(
+                            itemsIndexed(uiState.value.mediaFile) { index , file ->
+                                MusicListItems(
                                     context = context,
-                                    folder = folder,
+                                    folder = file,
                                     onFolderClick = {
-                                        onItemClick.invoke(folder.relativePath)
+                                        showSheet = index
                                     }
                                 )
                             }
@@ -208,3 +254,78 @@ fun MusicScreen(
         }
     }
 }
+
+@Composable
+fun MusicTabBar(
+    modifier: Modifier = Modifier,
+    tabs : List<Folder>,
+    selectedIndex : Long,
+    onSelected : (Long) -> Unit
+) {
+
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        tabs.forEachIndexed { i , item ->
+
+            val backGround = if (item.id == selectedIndex) Color.Cyan else Color.LightGray
+            val textColor = if (item.id == selectedIndex) Color.Black else Color.White
+
+            item {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(backGround)
+                        .clickable {
+                            onSelected.invoke(item.id)
+                        }
+                        .padding(vertical = 12.dp, horizontal = 18.dp)
+                ) {
+                    val tabName = remember {
+                        if (item.fileCount>0){
+                            item.name.plus(" (${item.fileCount})")
+                        }else{
+                            item.name
+                        }
+                    }
+
+                    Text(
+                        text = tabName,
+                        textAlign = TextAlign.Center,
+                        color = textColor,
+                        style = MaterialTheme.typography.titleSmall,
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

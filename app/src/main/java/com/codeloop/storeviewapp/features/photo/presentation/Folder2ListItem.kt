@@ -15,6 +15,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,40 +31,29 @@ fun Folder2ListItem(
     folder: Folder,
     onFolderClick: (Folder) -> Unit,
 ) {
+    val dateText = remember(folder.date, folder.fileCount) {
+        val date = ZoneTimer.formatByYearTimePattern(folder.date, "MMMM-dd-yyyy")
+        "$date • ${folder.fileCount} Files"
+    }
 
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Cyan
-        ),
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .clickable { onFolderClick(folder) },
+        colors = CardDefaults.cardColors(containerColor = Color.Cyan),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-
-        Column(
-            modifier = Modifier
-                .clickable{
-                    onFolderClick.invoke(folder)
-                }
-                .padding(10.dp)
-        ) {
+        Column(modifier = Modifier.padding(10.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column (
-                    modifier = Modifier,
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.SpaceBetween
-                ){
+                Column {
                     Text(folder.name, style = MaterialTheme.typography.titleMedium)
-
-                    val createdDate = ZoneTimer.formatByYearTimePattern(folder.date, pattern = "MMMM-dd-yyyy")
-
-                    Text(createdDate.plus(" . ").plus(folder.fileCount.toString().plus(" Files")), style = MaterialTheme.typography.bodySmall)
+                    Text(dateText, style = MaterialTheme.typography.bodySmall)
                 }
                 CircleMergeImageCard(
                     context = context,

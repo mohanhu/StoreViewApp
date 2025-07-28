@@ -1,15 +1,12 @@
 package com.codeloop.storeviewapp.features.photo.presentation
 
 import android.Manifest
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,17 +19,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,7 +42,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.codeloop.storeviewapp.features.utils.permissions.rememberPermissions
 import com.codeloop.storeviewapp.features.utils.view.AlertDialogs
@@ -58,13 +53,17 @@ import kotlinx.coroutines.launch
 fun PhotoScreen(
     modifier: Modifier = Modifier,
     title: String,
-    uiState: State<PhotoUiState>,
+    uiState: PhotoUiState,
     accept: (PhotoUiAction) -> Unit = {},
-    onItemClick : (String) -> Unit = {}
+    onItemClick: (String) -> Unit = {}
 ) {
+
+    println("PhotoScreen title ${uiState.mediaFileFolders}")
 
     val context = LocalContext.current
     var showPermissionDialog by rememberSaveable { mutableStateOf(false) }
+
+    val photoListState = rememberLazyListState()
 
     val scope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
@@ -124,9 +123,8 @@ fun PhotoScreen(
     ) {
         Box(
             modifier = modifier.fillMaxSize().padding(it),
-            contentAlignment = Alignment.Center,
         ) {
-            if (uiState.value.mediaFileFolders.isNotEmpty()) {
+            if (uiState.mediaFileFolders.isNotEmpty()) {
                 SwipeRefreshAction(
                     onRefresh = {
                         isRefreshing = true
@@ -136,9 +134,10 @@ fun PhotoScreen(
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.background)
+                                .background(MaterialTheme.colorScheme.background),
+                            state = photoListState
                         ) {
-                            items(uiState.value.mediaFileFolders) { folder ->
+                            items(uiState.mediaFileFolders, key = { it.id} ) { folder ->
                                 Folder2ListItem(
                                     context = context,
                                     folder = folder,
