@@ -21,7 +21,8 @@ moko = "0.18.0"
 lifecycleViewModel = "2.8.3"
 ksp = "1.9.0-1.0.13"
 hilt = "2.48.1"
-media3_version = "1.6.0"
+media3_version = "1.9.3"
+snapper = "0.3.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -66,12 +67,12 @@ media3-datasource-okhttp = { group = "androidx.media3", name= "media3-datasource
 media3-datasource-rtmp = { group = "androidx.media3", name= "media3-datasource-rtmp", version.ref = "media3_version" }
 media3-ui = { group = "androidx.media3", name= "media3-ui", version.ref = "media3_version" }
 media3-ui-compose = { group = "androidx.media3", name= "media3-ui-compose", version.ref = "media3_version" }
+snapper = { module = "dev.chrisbanes.snapper:snapper", version.ref = "snapper" }
 
 [bundles]
 media_all = [ "media3-exoplayer", "media3-exoplayer-dash",
-    "media3-exoplayer-rtsp",
-    "media3-exoplayer-ima", "media3-datasource-cronet",
-    "media3-datasource-okhttp", "media3-datasource-rtmp",
+    "media3-exoplayer-rtsp", "media3-datasource-cronet",
+    "media3-datasource-okhttp",
     "media3-ui", "media3-ui-compose" ,
     "media3-exoplayer-hls", "media3-exoplayer-smoothstreaming",
 ]

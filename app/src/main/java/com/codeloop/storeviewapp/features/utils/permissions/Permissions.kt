@@ -25,7 +25,7 @@ fun rememberPermissions(
                 onPermissionGranted.invoke()
             }
 
-            result.forEach { permission, grant ->
+            result.forEach { (permission, grant) ->
                 if (!grant) {
                     if (!ActivityCompat.shouldShowRequestPermissionRationale(
                             context as Activity, permission

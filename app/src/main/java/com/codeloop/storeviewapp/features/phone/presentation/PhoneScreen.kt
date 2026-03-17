@@ -47,6 +47,7 @@ import com.codeloop.storeviewapp.features.utils.view.AlertDialogs
 import com.codeloop.storeviewapp.features.utils.view.SwipeRefreshAction
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.core.net.toUri
 
 
 @Composable
@@ -131,7 +132,7 @@ fun PhoneScreen(
                                     phoneList = phoneList,
                                     dialCall = {
                                         val intent = Intent(Intent.ACTION_DIAL)
-                                        intent.data = Uri.parse("tel:${phoneList.number}")
+                                        intent.data = "tel:${phoneList.number}".toUri()
                                         context.startActivity(intent)
                                     }
                                 )

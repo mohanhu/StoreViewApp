@@ -24,6 +24,14 @@ android {
         }
     }
 
+    ndkVersion = "26.1.10909125"
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
     buildTypes {
 
         debug {
@@ -130,9 +138,9 @@ dependencies {
     ksp ("androidx.room:room-compiler:2.6.1")
     implementation ("androidx.room:room-ktx:2.6.1")
 
-    implementation("dev.chrisbanes.snapper:snapper:0.3.0")
+    implementation(libs.snapper)
 
     implementation ("androidx.compose.ui:ui-text-google-fonts:1.8.1")
-    implementation ("androidx.core:core-splashscreen:1.0.0")
+    implementation ("androidx.core:core-splashscreen:1.2.0")
 
 }

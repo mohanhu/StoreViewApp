@@ -7,11 +7,16 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -68,8 +74,10 @@ fun PhotoScreen(
     val scope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
 
+    /*no need above 13+ version*/
     val permissionList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
+//        arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO)
+        arrayOf()
     } else {
         arrayOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -119,10 +127,38 @@ fun PhotoScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackBarHostState) }
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackBarHostState,
+                snackbar = { snackData ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+                    ) {
+                        Text(
+                            text = snackData.visuals.message,
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                        )
+
+                        snackData.visuals.actionLabel?.let {
+                            Text(
+                                text = it,
+                                modifier = Modifier.align(Alignment.CenterVertically).clickable{
+                                    snackData.performAction()
+                                },
+                            )
+                        }
+                    }
+                },
+            )
+        },
     ) {
         Box(
-            modifier = modifier.fillMaxSize().padding(it),
+            modifier = modifier
+                .fillMaxSize()
+                .padding(it),
         ) {
             if (uiState.mediaFileFolders.isNotEmpty()) {
                 SwipeRefreshAction(
@@ -154,12 +190,20 @@ fun PhotoScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
-                        .clickable {
-                            if (permissionGranted.invoke()) {
-                                accept.invoke(PhotoUiAction.PermissionGranted)
-                            } else {
-                                cameraPermissionState.launch(permissionList)
-                            }
+                        .indication(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = LocalIndication.current
+                        )
+                        .pointerInput(true,) {
+                            detectTapGestures(
+                                onPress = {
+                                    if (permissionGranted.invoke()) {
+                                        accept.invoke(PhotoUiAction.PermissionGranted)
+                                    } else {
+                                        cameraPermissionState.launch(permissionList)
+                                    }
+                                }
+                            )
                         },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
